@@ -570,7 +570,517 @@ if __name__ == '__main__':
 
 ## 9. 自定义函数
 
-TODO
+- 函数嵌套：
+
+函数的嵌套能够保证内部函数的隐私：
+
+```python
+def connect_DB():
+    def get_DB_configuration():
+        return host, username, password
+    conn = connector.connect(get_DB_configuration())
+    return conn
+```
+
+提高程序的运行效率,因为在计算之前，需要检查输入是否合法， 所以我写成了函数嵌套的形式，这样一来，输入是否合法就只用检查一次。而如果我们不使 用函数嵌套，那么每调用一次递归便会检查一次，这是没有必要的，也会降低程序的运行效率。
+
+```python
+def factorial(input):
+    # validation check
+    if not isinstance(input, int):
+        raise Exception('input must be an integer.')
+    if input < 0:
+        raise Exception('input must be greater or equal to 0')
+
+    def inner_factorial(input):
+        if input <= 1:
+            return 1
+        return input * inner_factorial(input - 1)
+
+    return inner_factorial(input)
+```
+
+
+
+- 闭包：
+
+```python
+def nth_power(exponent):
+    def exponent_of(base):
+        return base ** exponent
+
+    return exponent_of
+if __name__ == '__main__':
+    square = nth_power(2)
+    print(square)
+    print(square(2))
+    cube = nth_power(3)
+    print(cube)
+    print(cube(3))
+    
+<function nth_power.<locals>.exponent_of at 0x105e3b378>
+4
+<function nth_power.<locals>.exponent_of at 0x105e3b268>
+27
+```
+
+这里外部函数 nth_power() 返回值，是函数 exponent_of()，而不是一个具体的数值。需 要注意的是，在执行完square = nth_power(2)和cube = nth_power(3)后，外部 函数 nth_power() 的参数 exponent，仍然会被内部函数 exponent_of() 记住。这样，之 后我们调用 square(2) 或者 cube(2) 时，程序就能顺利地输出结果，而不会报错说参数 exponent 没有定义了。
+
+使用闭包的原因？
+
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/img/20201026134507.png" alt="image-20201026134501989" style="zoom:33%;" />
+
+函数开头需要做一些额外工作，而你又需要多次调 用这个函数时，将那些额外工作的代码放在外部函数，就可以减少多次调用导致的不必要的 开销，提高程序的运行效率。
 
 ## 10 匿名函数
+
+```
+lambda argument1, argument2,... argumentN : expression
+```
+
+```
+>>> square = lambda x: x**2
+>>> square(3)
+9
+```
+
+**lambda 是一个表达式(expression)，并不是一个语句(statement)**
+
+所谓的表达式，就是用一系列“公式”去表达一个东西，比如x + 2、 x**2等等;
+
+而所谓的语句，则一定是完成了某些功能，比如赋值语句x = 1完成了赋值，print 语句 print(x)完成了打印，条件语句 if x < 0:完成了选择功能等等。
+
+lambda 可以用在一些常规函数 def 不能用的地方，比如，lambda 可以用在列表内 部，而常规函数却不能:
+
+```
+>>> [(lambda x: x*x)(x) for x in range(10)]
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+```
+
+lambda 可以被用作某些函数的参数，而常规函数 def 也不能:
+
+```java
+>>> l = [(1, 20), (3, 0), (9, 10), (2, -1)]
+>>> l.sort(key=lambda x: x[1])
+>>> print(l)
+[(2, -1), (3, 0), (9, 10), (1, 20)]
+>>> l
+[(2, -1), (3, 0), (9, 10), (1, 20)]
+```
+
+常规函数 def 必须通过其函数名被调用，因此必须首先被定义。但是作为一个表达式的 lambda，返回的函数对象就不需要名字了。
+
+
+
+函数式编程：
+
+TODO
+
+## 11. **面向对象(上)**
+
+## 12. 面向对象（下）
+
+```java
+
+class SearchEngineBase(object):
+    def __init__(self):
+        pass
+    # 负责读取文件内容，将文件路径作为 ID，连同内容一起送到 process_corpus 中。
+    def add_corpus(self, file_path):
+        with open(file_path, 'r') as fin:
+            text = fin.read()
+        self.process_corpus(file_path, text)
+    # 对内容进行处理，然后文件路径为 ID ，将处理后的内容存下来。处理后的内容，就叫做索引（index）
+    def process_corpus(self, id, text):
+        raise Exception('process_corpus not implemented.')
+    # 给定一个询问，处理询问，再通过索引检索，然后返回。
+    def search(self, query):
+        raise Exception('search not implemented.')
+
+def main(search_engine):
+    for file_path in ['1.txt', '2.txt', '3.txt', '4.txt', '5.txt']:
+        search_engine.add_corpus(file_path)
+
+    while True:
+        query = input()
+        results = search_engine.search(query)
+        print('found {} result(s):'.format(len(results)))
+        for result in results:
+            print(result)
+
+
+
+class SimpleEngine(SearchEngineBase):
+    def __init__(self):
+        super(SimpleEngine, self).__init__()
+        self.__id_to_texts = {}
+
+    def process_corpus(self, id, text):
+        self.__id_to_texts[id] = text
+
+    def search(self, query):
+        results = []
+        for id, text in self.__id_to_texts.items():
+            if query in text:
+                results.append(id)
+        return results
+
+if __name__ == '__main__':
+    search_engine = SimpleEngine()
+    main(search_engine)
+```
+
+![image-20201026153805939](https://raw.githubusercontent.com/haojunsheng/ImageHost/master/img/20201026153806.png)
+
+
+
+查询语句：
+
+```main
+
+import re
+
+class BOWEngine(SearchEngineBase):
+    def __init__(self):
+        super(BOWEngine, self).__init__()
+        self.__id_to_words = {}
+
+    def process_corpus(self, id, text):
+        self.__id_to_words[id] = self.parse_text_to_words(text)
+
+    def search(self, query):
+        query_words = self.parse_text_to_words(query)
+        results = []
+        for id, words in self.__id_to_words.items():
+            if self.query_match(query_words, words):
+                results.append(id)
+        return results
+    
+    @staticmethod
+    def query_match(query_words, words):
+        for query_word in query_words:
+            if query_word not in words:
+                return False
+        return True
+
+    @staticmethod
+    def parse_text_to_words(text):
+        # 使用正则表达式去除标点符号和换行符
+        text = re.sub(r'[^\w ]', ' ', text)
+        # 转为小写
+        text = text.lower()
+        # 生成所有单词的列表
+        word_list = text.split(' ')
+        # 去除空白单词
+        word_list = filter(None, word_list)
+        # 返回单词的 set
+        return set(word_list)
+
+search_engine = BOWEngine()
+main(search_engine)
+```
+
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/img/20201026154054.png" alt="image-20201026154053889" style="zoom:50%;" />
+
+## 13. python模块化
+
+```python
+# utils.py
+def get_sum(a, b):
+    return a + b
+# class_utils.py
+from audioop import reverse
+
+class Encoder(object):
+    def encode(self, s):
+        return s[::-1]
+
+class Decoder(object):
+    def decode(self, s):
+        return ''.join(reverse(list(s)))
+      
+# main.py
+from utils import get_sum
+from class_utils import *
+
+if __name__ == '__main__':
+    print(get_sum(1, 2))
+    encoder = Encoder()
+    decoder = Decoder()
+    print(encoder.encode('abcde'))
+    print(encoder.encode('edcba'))
+```
+
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/img/20201026155256.png" alt="image-20201026155256252" style="zoom:33%;" />
+
+
+
+1. 通过绝对路径和相对路径，我们可以 import 模块;
+2. 在大型工程中模块化非常重要，模块的索引要通过绝对路径来做，而绝对路径从程序的根目录开始;
+
+3. 记着巧用if __name__ == '__main__'来避开 import 时执行。
+
+
+
+
+
+# 2. 进阶
+
+## 15. **Python**对象的比较、拷贝
+
+== vs is：
+
+'=='操作符比较对象之间的值是否相等，'is'操作符比较的是对象的身份标识是否相等，即它们是否是同一个对象，是否指向同一个内存地址。
+
+```python
+>>> a = 10
+>>> b = 10
+>>> a == b
+True
+>>> id(a)
+4411706560
+>>> id(b)
+4411706560
+>>> a is b
+True
+```
+
+对于整型数字来说，以上a is b为 True 的结论，只适用于 -5 到 256 范围内的数字。
+
+```
+>>> a = 257
+>>> b=257
+>>> a is b
+False
+>>> a==b
+True
+```
+
+出于对性能优化的考虑，Python 内部会对 -5 到 256 的整型维持一个数组，起到一个缓存的作用。
+
+比较操作符'is'的速度效率，通常要优于'=='。因为'is'操作符不能被重载，这样，Python 就不需要去寻找，程序中是否有其他地方重载了比较操作符，并去调用。执行比较操作符'is'，就仅仅是比较两个变量的 ID 而已。但是'=='操作符却不同，执行a == b相当于是去执行a.__eq__(b)，而 Python 大部分的数据类型都会去重载__eq__这个函数，其内部的处理通常会复杂一些。比如，对于列表，__eq__函数会去遍历列表中的元素，比较它们的顺序和值是否相等。不过，对于不可变（immutable）的变量，如果我们之前用'=='或者'is'比较过，结果是不是就一直不变了呢？
+
+```python
+>>> t1 = (1, 2, [3, 4])
+>>> t2 = (1, 2, [3, 4])
+>>> t1 == t2
+True
+>>> t1[-1].append(5)
+>>> t1
+(1, 2, [3, 4, 5])
+>>> t1 == t2
+False
+```
+
+元组是不可变的，但元组可以嵌套，它里面的元素可以是列表类型，列表是可变的，所以如果我们修改了元组中的某个可变元素，那么元组本身也就改变了，之前用'is'或者'=='操作符取得的结果，可能就不适用了。
+
+**深拷贝和浅拷贝**
+
+Python 中的浅拷贝（shallow copy）和深度拷贝（deep copy）
+
+```java
+>>> l1 = [1, 2, 3]
+>>> l2 = list(l1)
+>>> l2
+[1, 2, 3]
+>>> l1==l2
+True
+>>> l1 is l2
+False
+>>> s1 = set([1, 2, 3])
+>>> s2 = set(s1)
+>>> s2
+{1, 2, 3}
+>>> s1 == s2
+True
+>>> s1 is s2
+False
+```
+
+l2 就是 l1 的浅拷贝，s2 是 s1 的浅拷贝。当然，对于可变的序列，我们还可以通过切片操作符':'完成浅拷贝，比如下面这个列表的例子：
+
+```python
+>>> l1 = [1, 2, 3]
+>>> l2 = l1[:]
+>>> l2
+[1, 2, 3]
+>>> l1 == l2
+True
+>>> l1 is l2
+False
+```
+
+还可以使用copy.copy
+
+```python
+>>> import copy
+>>> l1 = [1, 2, 3]
+>>> l2 = copy.copy(l1)
+>>> l2
+[1, 2, 3]
+>>> l1==l2
+True
+>>> l1 is l2
+False
+```
+
+特殊情况：对于元组，使用 tuple() 或者切片操作符':'不会创建一份浅拷贝，相反，它会返回一个指向相同元组的引用：
+
+```java
+>>> t1 = (1, 2, 3)
+>>> t2 = tuple(t1)
+>>> t1 == t2
+True
+>>> t1 is t2
+True
+```
+
+**浅拷贝，是指重新分配一块内存，创建一个新的对象，里面的元素是原对象中子对象的引用**。因此，如果原对象中的元素不可变，那倒无所谓；但如果元素可变，浅拷贝通常会带来一些副作用，尤其需要注意。我们来看下面的例子：
+
+```java
+>>> l1 = [[1, 2], (30, 40)]
+>>> l2 = list(l1)
+>>> l1.append(100)
+>>> l1[0].append(3)
+>>> l1
+[[1, 2, 3], (30, 40), 100]
+>>> l2
+[[1, 2, 3], (30, 40)]
+>>> l1[1] += (50, 60)
+>>> l1
+[[1, 2, 3], (30, 40, 50, 60), 100]
+>>> l2
+[[1, 2, 3], (30, 40)]
+```
+
+我们首先初始化了一个列表 l1，里面的元素是一个列表和一个元组；然后对 l1 执行浅拷贝，赋予 l2。因为浅拷贝里的元素是对原对象元素的引用，因此 l2 中的元素和 l1 指向同一个列表和元组对象。l1.append(100)，表示对 l1 的列表新增元素 100。这个操作不会对 l2 产生任何影响，因为 l2 和 l1 作为整体是两个不同的对象，并不共享内存地址。操作过后 l2 不变，l1 会发生改变。再来看，l1[0].append(3)，这里表示对 l1 中的第一个列表新增元素 3。因为 l2 是 l1 的浅拷贝，l2 中的第一个元素和 l1 中的第一个元素，共同指向同一个列表，因此 l2 中的第一个列表也会相对应的新增元素 3。操作后 l1 和 l2 都会改变：最后是l1[1] += (50, 60)，因为元组是不可变的，这里表示对 l1 中的第二个元组拼接，然后重新创建了一个新元组作为 l1 中的第二个元素，而 l2 中没有引用新元组，因此 l2 并不受影响。操作后 l2 不变，l1 发生改变。
+
+**深度拷贝，是指重新分配一块内存，创建一个新的对象，并且将原对象中的元素，以递归的方式，通过创建新的子对象拷贝到新对象中。因此，新对象和原对象没有任何关联。**Python 中以 copy.deepcopy() 来实现对象的深度拷贝。
+
+```python
+>>> import copy
+>>> l1 = [[1, 2], (30, 40)]
+>>> l2 = copy.deepcopy(l1)
+>>> l1 is l2
+False
+>>> l1.append(100)
+>>> l1[0].append(3)
+>>> 1
+1
+>>> l1
+[[1, 2, 3], (30, 40), 100]
+>>> l2
+[[1, 2], (30, 40)]
+>>> l2
+[[1, 2], (30, 40)]
+```
+
+深度拷贝也不是完美的，往往也会带来一系列问题。如果被拷贝对象中存在指向自身的引用，那么程序很容易陷入无限循环：
+
+```python
+>>> import copy
+>>> x = [1]
+>>> x.append(x)
+>>> x
+[1, [...]]
+>>> y = copy.deepcopy(x)
+>>> y
+[1, [...]]
+>>> x==y
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+RecursionError: maximum recursion depth exceeded in comparison
+```
+
+上面这个例子，列表 x 中有指向自身的引用，因此 x 是一个无限嵌套的列表。但是我们发现深度拷贝 x 到 y 后，程序并没有出现 stack overflow 的现象。这是为什么呢？其实，这是因为深度拷贝函数 deepcopy 中会维护一个字典，记录已经拷贝的对象与其 ID。拷贝过程中，如果字典里已经存储了将要拷贝的对象，则会从字典直接返回，我们来看相对应的源码就能明白：
+
+```python
+
+def deepcopy(x, memo=None, _nil=[]):
+    """Deep copy operation on arbitrary Python objects.
+      
+  See the module's __doc__ string for more info.
+  """
+    if memo is None:
+        memo = {}
+    d = id(x) # 查询被拷贝对象x的id
+  y = memo.get(d, _nil) # 查询字典里是否已经存储了该对象
+  if y is not _nil:
+      return y # 如果字典里已经存储了将要拷贝的对象，则直接返回
+        ...    
+```
+
+## 16. 值传递，引用传递or其他，Python里参数是如何传递的？
+
+TODO
+
+## 17. **强大的装饰器**
+
+函数的核心概念：
+
+- 把函数赋予变量；
+- 把函数当作参数，传入另一个函数中；
+- 可以在函数里定义函数，也就是函数的嵌套；
+
+- 函数的返回值也可以是函数对象，闭包
+
+
+
+## 20. **揭秘** **Python** **协程**
+
+C10K 瓶颈，也就是 同时连接到服务器的客户达到了一万个。
+
+使用生成器，是 Python 2 开头的时代实现协程的老方法了，Python 3.7 提供了新的基于 asyncio 和 async / await 的方法。
+
+简单的爬虫代码：
+
+```python
+import time
+
+
+def crawl_page(url):
+    print('crawling {}'.format(url))
+    sleep_time = int(url.split('_')[-1])
+    time.sleep(sleep_time)
+    print('OK {}'.format(url))
+
+
+def main(urls):
+    for url in urls:
+        crawl_page(url)
+
+
+if __name__ == '__main__':
+    main(['url_1', 'url_2', 'url_3', 'url_4'])
+```
+
+<img src="https://raw.githubusercontent.com/haojunsheng/ImageHost/master/img/20201025142308.png" alt="image-20201025142308521" style="zoom:50%;" />
+
+使用协程：
+
+```python
+import asyncio
+
+
+async def crawl_page(url):
+    print('crawling {}'.format(url))
+    sleep_time = int(url.split('_')[-1])
+    await asyncio.sleep(sleep_time)
+    print('OK {}'.format(url))
+
+
+async def main(urls):
+    for url in urls:
+        await crawl_page(url)
+
+
+if __name__ == '__main__':
+    asyncio.run(main(['url_1', 'url_2', 'url_3', 'url_4']))
+```
+
+![image-20201025144558682](https://raw.githubusercontent.com/haojunsheng/ImageHost/master/img/20201025144558.png)
+
+发现效率并没有提高，
+
+
 
